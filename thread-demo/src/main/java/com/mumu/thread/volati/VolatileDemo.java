@@ -1,87 +1,82 @@
 package com.mumu.thread.volati;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.mumu.threead.utils.ThreadUtils;
 
 public class VolatileDemo {
 
 	public static void main(String[] args) throws InterruptedException {
-		test(100, 100000);
+		// 100：线程数量，100000： 循环次数, 5：5组测试
+		test(20, 1000000, 10);
 	}
 
-	private static void test(int threadnum, int cycle)
+	private static void test(int threadnum, int cycle, int backNums)
 			throws InterruptedException {
-		testAtomic(threadnum, cycle);
-		testSync(threadnum, cycle);
-		testVolatile(threadnum, cycle);
+		System.out.println("-----------------------------------------");
+		System.out.println("线程数量： " + threadnum + " || " + "循环次数：" + cycle
+				+" || " + "用例数量：" + backNums);
+		System.out.println("-----------------------------------------");
+		testBlock(threadnum, cycle, backNums, new VolatileObj());
+		System.out.println("-----------------------------------------");
+		testBlock(threadnum, cycle, backNums, new LockObj());
+		System.out.println("-----------------------------------------");
+		testBlock(threadnum, cycle, backNums, new SyncObj());
+		System.out.println("-----------------------------------------");
 	}
 
-	private static void testVolatile(int threadnum, int cycle)
-			throws InterruptedException {
-		VolatileObj blockobj = new VolatileObj();
-		long begin = System.currentTimeMillis();
-		Thread[] threads = new Thread[threadnum];
-		for (int i = 0; i < threads.length; i++) {
-			threads[i] = new VolatileThread(cycle, blockobj);
+	private static void testBlock(int threadnum, int cycle, int backNums,
+			BlockObj blockobj) throws InterruptedException {
+		List<Long> records = new ArrayList<Long>();
+		System.out.println(blockobj.getName()+":");
+		for (int i = 0; i < backNums; i++) {
+			Thread[] threads = new Thread[threadnum];
+			for (int j = 0; j < threads.length; j++) {
+				threads[j] = new BlockThread(cycle, blockobj);
+			}
+			long useTime = ThreadUtils.executeThreads(threads, cycle);
+			records.add(useTime);
+			System.out.println("用例"+ (i+1) + "：" +useTime + " 毫秒");
 		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].start();
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].join();
-		}
-		System.out.println("-----------------testing Volatile");
-		System.out.println("result: "+ blockobj.getNum());
-		System.out.println("线程数量: " + threads.length);
-		System.out.println("线程循环次数： " + cycle);
-		System.out
-				.println("用时: " + (System.currentTimeMillis() - begin) + "毫秒");
+		handerResult(records);
 	}
 
-	private static void testSync(int threadnum, int cycle) throws InterruptedException {
-		SyncObj blockobj = new SyncObj();
-		long begin = System.currentTimeMillis();
-		Thread[] threads = new Thread[threadnum];
-		for (int i = 0; i < threads.length; i++) {
-			threads[i] = new SyncrThread(cycle, blockobj);
+	private static void handerResult(List<Long> records) {
+		long sum = 0L;
+		for (Long record : records){
+			sum += record;
 		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].start();
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].join();
-		}
-		System.out.println("-----------------testing sync");
-		System.out.println("result: "+ blockobj.getNum());
-		System.out.println("线程数量: " + threads.length);
-		System.out.println("线程循环次数： " + cycle);
-		System.out
-				.println("用时: " + (System.currentTimeMillis() - begin) + "毫秒");
+		System.out.println("平均 ：" + sum/records.size() +" 毫秒");
 	}
 
-	private static void testAtomic(int threadnum, int cycle) throws InterruptedException {
-		LockObj blockobj = new LockObj();
-		long begin = System.currentTimeMillis();
-		Thread[] threads = new Thread[threadnum];
-		for (int i = 0; i < threads.length; i++) {
-			threads[i] = new LockThread(cycle, blockobj);
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].start();
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].join();
-		}
-		System.out.println("-----------------testing lock");
-		System.out.println("result: "+ blockobj.getNum());
-		System.out.println("线程数量: " + threads.length);
-		System.out.println("线程循环次数： " + cycle);
-		System.out
-				.println("用时: " + (System.currentTimeMillis() - begin) + "毫秒");
-	}
 }
 
-class SyncObj{
+/**
+ * 需要同步的竞争资源
+ * 
+ * @author yangbin
+ *
+ */
+abstract class BlockObj {
+
+	abstract int getNum();
+
+	abstract void setNum(int num);
+
+	abstract String getName();
+
+}
+
+/**
+ * synchronized obj
+ * 
+ * @author yangbin
+ *
+ */
+class SyncObj extends BlockObj {
 	private int num;
 
 	public synchronized int getNum() {
@@ -91,9 +86,19 @@ class SyncObj{
 	public synchronized void setNum(int num) {
 		this.num = num;
 	}
+
+	String getName() {
+		return "synchronized";
+	}
 }
 
-class LockObj {
+/**
+ * JDK5.0 Lock obj
+ * 
+ * @author yangbin
+ *
+ */
+class LockObj extends BlockObj {
 	private int num;
 	private Lock lock = new ReentrantLock();
 
@@ -106,9 +111,20 @@ class LockObj {
 		this.num = num;
 		lock.unlock();
 	}
+
+	@Override
+	String getName() {
+		return "Lock";
+	}
 }
 
-class VolatileObj {
+/**
+ * volatile obj
+ * 
+ * @author yangbin
+ *
+ */
+class VolatileObj extends BlockObj {
 	private volatile int num;
 
 	public int getNum() {
@@ -118,59 +134,31 @@ class VolatileObj {
 	public void setNum(int num) {
 		this.num = num;
 	}
+
+	@Override
+	String getName() {
+		return "volatile";
+	}
 }
 
-class SyncrThread extends Thread {
-	private SyncObj obj;
+/**
+ * 执行线程
+ * 
+ * @author yangbin
+ *
+ */
+class BlockThread extends Thread {
 	private int cycle;
+	private BlockObj obj;
 
-	public SyncrThread(int cycle,SyncObj obj) {
+	public BlockThread(int cycle, BlockObj obj) {
 		this.obj = obj;
 		this.cycle = cycle;
 	}
 
 	@Override
 	public void run() {
-		for (int i = 0; i < cycle; i++) {
-			if (cycle % 2 != 0) {
-				obj.getNum();
-			} else {
-				obj.setNum(cycle);
-			}
-		}
-	}
-}
-class LockThread extends Thread {
-	private LockObj obj;
-	private int cycle;
-
-	public LockThread(int cycle,LockObj obj) {
-		this.obj = obj;
-		this.cycle = cycle;
-	}
-
-	@Override
-	public void run() {
-		for (int i = 0; i < cycle; i++) {
-			if (cycle % 2 != 0) {
-				obj.getNum();
-			} else {
-				obj.setNum(cycle);
-			}
-		}
-	}
-}
-class VolatileThread extends Thread {
-	private VolatileObj obj;
-	private int cycle;
-
-	public VolatileThread(int cycle, VolatileObj obj) {
-		this.obj = obj;
-		this.cycle = cycle;
-	}
-
-	@Override
-	public void run() {
+		// 奇数get 偶数set
 		for (int i = 0; i < cycle; i++) {
 			if (cycle % 2 != 0) {
 				obj.getNum();
