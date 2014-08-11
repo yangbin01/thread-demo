@@ -1,4 +1,4 @@
-package com.mumu.threead.utils;
+package com.mumu.thread.utils;
 
 public class ThreadUtils {
 

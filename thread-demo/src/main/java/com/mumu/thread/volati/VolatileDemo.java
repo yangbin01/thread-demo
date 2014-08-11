@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.mumu.threead.utils.ThreadUtils;
+import com.mumu.thread.utils.ThreadUtils;
 
 public class VolatileDemo {
 
