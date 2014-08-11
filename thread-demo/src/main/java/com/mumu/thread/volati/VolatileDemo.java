@@ -18,7 +18,7 @@ public class VolatileDemo {
 			throws InterruptedException {
 		System.out.println("-----------------------------------------");
 		System.out.println("线程数量： " + threadnum + " || " + "循环次数：" + cycle
-				+" || " + "用例数量：" + backNums);
+				+ " || " + "用例数量：" + backNums);
 		System.out.println("-----------------------------------------");
 		testBlock(threadnum, cycle, backNums, new VolatileObj());
 		System.out.println("-----------------------------------------");
@@ -31,7 +31,7 @@ public class VolatileDemo {
 	private static void testBlock(int threadnum, int cycle, int backNums,
 			BlockObj blockobj) throws InterruptedException {
 		List<Long> records = new ArrayList<Long>();
-		System.out.println(blockobj.getName()+":");
+		System.out.println(blockobj.getName() + ":");
 		for (int i = 0; i < backNums; i++) {
 			Thread[] threads = new Thread[threadnum];
 			for (int j = 0; j < threads.length; j++) {
@@ -39,17 +39,17 @@ public class VolatileDemo {
 			}
 			long useTime = ThreadUtils.executeThreads(threads, cycle);
 			records.add(useTime);
-			System.out.println("用例"+ (i+1) + "：" +useTime + " 毫秒");
+			System.out.println("用例" + (i + 1) + "：" + useTime + " 毫秒");
 		}
 		handerResult(records);
 	}
 
 	private static void handerResult(List<Long> records) {
 		long sum = 0L;
-		for (Long record : records){
+		for (Long record : records) {
 			sum += record;
 		}
-		System.out.println("平均 ：" + sum/records.size() +" 毫秒");
+		System.out.println("平均 ：" + sum / records.size() + " 毫秒");
 	}
 
 }
@@ -103,7 +103,13 @@ class LockObj extends BlockObj {
 	private Lock lock = new ReentrantLock();
 
 	public int getNum() {
-		return num;
+		try {
+			lock.lock();
+			return num;
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	public void setNum(int num) {
