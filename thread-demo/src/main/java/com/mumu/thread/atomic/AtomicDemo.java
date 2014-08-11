@@ -7,7 +7,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class AtomicDemo {
 
 	public static void main(String[] args) throws Exception {
-		test(50, 1000000);
+		//32：线程数， 1000000：循环次数
+		test(32, 1000000);
 	}
 	private static void test(int threadnum, int cycle) throws InterruptedException{
 		testAtomic(threadnum, cycle);
@@ -76,7 +77,11 @@ public class AtomicDemo {
 		
 	}
 }
-
+/**
+ * 以下thread 执行+1操作
+ * @author yangbin
+ *
+ */
 class SyncThread extends Thread {
 
 	private int num;
