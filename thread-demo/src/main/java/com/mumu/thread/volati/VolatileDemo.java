@@ -1,3 +1,10 @@
+/**
+ * 32位 win7 
+ * 2 Intel(R) Core(TM) i3 cpu
+ * 
+ * 1/2 get， 1/2 get  性能： volatatile>lock>syncronized
+ * syncronized 在windouw与linux平台 性能差异比较大 线程少时 linux中syncronized性能较好
+ */
 package com.mumu.thread.volati;
 
 import java.util.ArrayList;
@@ -11,7 +18,7 @@ public class VolatileDemo {
 
 	public static void main(String[] args) throws InterruptedException {
 		// 20：线程数量，100000： 循环次数, 5：5组测试
-		test(2, 1000000, 5);
+		test(20, 100000, 5);
 	}
 
 	private static void test(int threadnum, int cycle, int backNums)

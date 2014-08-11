@@ -1,4 +1,10 @@
-
+/**
+ * 32位 win7 
+ * 2 Intel(R) Core(TM) i3 cpu
+ * 
+ * 只put操作 hashtable性能高
+ * 1/2 put， 1/2 get ConcurrentHashmap 性能高
+ */
 package com.mumu.thread.map;
 
 import java.util.ArrayList;

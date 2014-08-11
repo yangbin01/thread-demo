@@ -1,5 +1,11 @@
+/**
+ * 32位 win7 
+ * 2 Intel(R) Core(TM) i3 cpu
+ * 
+ * num++操作  性能： atomic原子操作>lock>syncronized
+ * syncronized 在windouw与linux平台 性能差异比较大 线程少时 linux中syncronized性能较好
+ */
 package com.mumu.thread.atomic;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
