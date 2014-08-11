@@ -1,142 +1,126 @@
 package com.mumu.thread.atomic;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.mumu.thread.utils.ThreadUtils;
+
+
 public class AtomicDemo {
 
 	public static void main(String[] args) throws Exception {
-		//32：线程数， 1000000：循环次数
-		test(32, 1000000);
-	}
-	private static void test(int threadnum, int cycle) throws InterruptedException{
-		testAtomic(threadnum, cycle);
-		testSync(threadnum, cycle);
-		testLock(threadnum, cycle);
-	}
-	private static void testAtomic(int threadnum, int cycle) throws InterruptedException {
-		AtomicInteger blockObj = new AtomicInteger();
-		long begin = System.currentTimeMillis();
-		Thread[] threads = new Thread[threadnum];
-		for (int i = 0; i < threads.length; i++) {
-			threads[i] = new AtomicThread(blockObj, cycle);
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].start();
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].join();
-		}
-		System.out.println("-----------------testing AtomicInteger");
-		System.out.println("线程数量: " + threads.length);
-		System.out.println("线程循环次数： " + cycle);
-		System.out.println("用时: " + (System.currentTimeMillis() - begin) + "毫秒");
-		
+		// 2：线程数， 1000000：循环次数, 5: 用例数量
+		test(20, 100000, 5);
 	}
 
-	private static void testSync(int threadnum, int cycle) throws InterruptedException {
-		long begin = System.currentTimeMillis();
-		Thread[] threads = new Thread[threadnum];
-		int num = 0;
-		Object obj = new Object();
-		for (int i = 0; i < threads.length; i++) {
-			threads[i] = new SyncThread(num, cycle, obj);
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].start();
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].join();
-		}
-		System.out.println("-----------------testing syncronized");
-		System.out.println("线程数量: " + threads.length);
-		System.out.println("线程循环次数： " + cycle);
-		System.out.println("用时: " + (System.currentTimeMillis() - begin) + "毫秒");
-		
+	private static void test(int threadnum, int cycle, int backNums)
+			throws InterruptedException {
+		System.out.println("-----------------------------------------");
+		System.out.println("线程数量： " + threadnum + " || " + "循环次数：" + cycle
+				+ " || " + "用例数量：" + backNums);
+		System.out.println("-----------------------------------------");
+		testBlock(threadnum, cycle, backNums, new AtomicObj(new AtomicInteger()));
+		System.out.println("-----------------------------------------");
+		testBlock(threadnum, cycle, backNums, new LockObj(new ReentrantLock()));
+		System.out.println("-----------------------------------------");
+		testBlock(threadnum, cycle, backNums, new SyncObj());
+		System.out.println("-----------------------------------------");
 	}
-
-	private static void testLock(int threadnum, int cycle) throws InterruptedException {
-		long begin = System.currentTimeMillis();
-		Thread[] threads = new Thread[threadnum];
-		int num = 0;
-		Lock lock = new ReentrantLock();
-		for (int i = 0; i < threads.length; i++) {
-			threads[i] = new LockThread(num, cycle, lock);
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].start();
-		}
-		for (int i = 0; i < threads.length; i++) {
-			threads[i].join();
-		}
-		System.out.println("-----------------testing Lock");
-		System.out.println("线程数量: " + threads.length);
-		System.out.println("线程循环次数： " + cycle);
-		System.out.println("用时: " + (System.currentTimeMillis() - begin) + "毫秒");
+	private static void testBlock(int threadnum, int cycle, int backNums, BlockObj blockobj) throws InterruptedException{
 		
+		List<Long> records = new ArrayList<Long>();
+		System.out.println(blockobj.getName() + ":");
+		
+		for (int i = 0; i < backNums; i++) {
+			Thread[] threads = new Thread[threadnum];
+			for (int j = 0; j < threads.length; j++) {
+				threads[j] = new BlockThread(cycle, blockobj);
+			}
+			long useTime = ThreadUtils.executeThreads(threads, cycle);
+			records.add(useTime);
+			System.out.println("用例" + (i + 1) + "：" + useTime + " 毫秒");
+		}
+		ThreadUtils.handerResult(records);
 	}
 }
-/**
- * 以下thread 执行+1操作
- * @author yangbin
- *
- */
-class SyncThread extends Thread {
 
-	private int num;
-	private Object lock;
-	private int cycle;
+abstract class BlockObj {
 
-	public SyncThread(int num, int cycle, Object lock) {
-		this.num = num;
+	abstract void add();
+	abstract String getName();
+}
+
+class SyncObj extends BlockObj {
+	private int num = 0;
+
+	void add() {
+			synchronized (this) {
+				this.num++;
+			}
+	}
+	@Override
+	String getName() {
+		return "syncronized";
+	}
+}
+
+class LockObj extends BlockObj {
+	private int num = 0;
+	private Lock lock;
+	
+	public LockObj(Lock lock){
 		this.lock = lock;
-		this.cycle = cycle;
+	}
+	void add() {
+		lock.lock();
+		this.num++;
+		lock.unlock();
+		
 	}
 
 	@Override
-	public void run() {
-		for (int i = 0; i < cycle; i++) {
-			synchronized (lock) {
-				num++;
-			}
-		}
+	String getName() {
+		return "lock";
 	}
 }
 
-class LockThread extends Thread {
+class AtomicObj extends BlockObj {
+	private AtomicInteger counter;
+	public AtomicObj(AtomicInteger counter){
+		this.counter = counter;
+	}
+	public void add() {
+		counter.incrementAndGet();
+	}
 
-	private int num;
-	private Lock lock;
+	@Override
+	String getName() {
+		return "atomic";
+	}
+}
+
+/**
+ * 以下thread 执行+1操作
+ * 
+ * @author yangbin
+ * 
+ */
+class BlockThread extends Thread{
+	private BlockObj blockobj;
 	private int cycle;
-
-	public LockThread(int num, int cycle, Lock lock) {
-		this.num = num;
-		this.lock = lock;
+	public BlockThread(int cycle, BlockObj blockobj){
+		this.blockobj = blockobj;
 		this.cycle = cycle;
 	}
-
+	
+	@Override
 	public void run() {
-		for (int i = 0; i < cycle; i++) {
-			lock.lock();
-			num++;
-			lock.unlock();
+		for(int i=0; i<cycle; i++){
+			blockobj.add();
 		}
 	}
 }
 
-class AtomicThread extends Thread {
-	private AtomicInteger counter;
-	private int recyle;
-
-	public AtomicThread(AtomicInteger counter, int recyle) {
-		this.counter = counter;
-		this.recyle = recyle;
-	}
-
-	public void run() {
-		for (int i = 0; i < recyle; i++) {
-			counter.incrementAndGet();
-		}
-	}
-}

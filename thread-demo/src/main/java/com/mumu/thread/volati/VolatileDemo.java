@@ -10,8 +10,8 @@ import com.mumu.thread.utils.ThreadUtils;
 public class VolatileDemo {
 
 	public static void main(String[] args) throws InterruptedException {
-		// 100：线程数量，100000： 循环次数, 5：5组测试
-		test(20, 1000000, 10);
+		// 20：线程数量，100000： 循环次数, 5：5组测试
+		test(2, 1000000, 5);
 	}
 
 	private static void test(int threadnum, int cycle, int backNums)
@@ -30,8 +30,10 @@ public class VolatileDemo {
 
 	private static void testBlock(int threadnum, int cycle, int backNums,
 			BlockObj blockobj) throws InterruptedException {
+		
 		List<Long> records = new ArrayList<Long>();
 		System.out.println(blockobj.getName() + ":");
+		
 		for (int i = 0; i < backNums; i++) {
 			Thread[] threads = new Thread[threadnum];
 			for (int j = 0; j < threads.length; j++) {
@@ -41,16 +43,9 @@ public class VolatileDemo {
 			records.add(useTime);
 			System.out.println("用例" + (i + 1) + "：" + useTime + " 毫秒");
 		}
-		handerResult(records);
+		ThreadUtils.handerResult(records);
 	}
 
-	private static void handerResult(List<Long> records) {
-		long sum = 0L;
-		for (Long record : records) {
-			sum += record;
-		}
-		System.out.println("平均 ：" + sum / records.size() + " 毫秒");
-	}
 
 }
 
