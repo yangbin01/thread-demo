@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 定制executor
- * 
+ * 继承ThreadPoolExecutor，覆盖ThreadPoolExecutor的一些方法完成定制化，复写方法是最后调用super
  * @author Administrator
  * 
  */

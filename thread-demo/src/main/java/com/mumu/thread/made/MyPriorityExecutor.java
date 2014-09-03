@@ -1,12 +1,12 @@
 package com.mumu.thread.made;
 
-import java.util.Random;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * 定制优先级executor
+ * ThreadPoolExecutor中传入优先级队列，task实现Runnable，Comparable接口
  * @author Administrator
  *
  */
