@@ -1,7 +1,10 @@
 package com.mumu.thread.synctools;
 
+import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * 同步屏障CyclicBarrier
@@ -10,31 +13,39 @@ import java.util.concurrent.CyclicBarrier;
  *
  */
 public class CyclicBarrierDemo {
-	
-	private static CyclicBarrier barrier = new CyclicBarrier(2, new BarrierRunnable());
-	public static void main(String[] args) throws InterruptedException, BrokenBarrierException {
-		new Thread(new Runnable() {
-			public void run() {
-				try {
-					barrier.await();
-					System.out.println(Thread.currentThread().getName()+" run over");
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} catch (BrokenBarrierException e) {
-					e.printStackTrace();
+
+	private static final int COUNT = 10;
+	private static CyclicBarrier barrier = new CyclicBarrier(COUNT,
+			new BarrierRunnable());
+
+	public static void main(String[] args) throws InterruptedException,
+			BrokenBarrierException {
+		for (int i = 0; i < COUNT; i++) {
+			new Thread(new Runnable() {
+				public void run() {
+					try {
+						Thread.sleep(new Random().nextInt(2000));
+						System.out.println(Thread.currentThread().getName()
+								+ " waiting");
+						barrier.await();
+						System.out.println(Thread.currentThread().getName()
+								+ " go on running");
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (BrokenBarrierException e) {
+						e.printStackTrace();
+					}
 				}
-			}
-		}, "barrier-thread").start();
-		barrier.await();
-		System.out.println("main run over");
-		
+			}).start();
+		}
+
 	}
 }
 
-class BarrierRunnable implements Runnable{
+class BarrierRunnable implements Runnable {
 
 	public void run() {
 		System.out.println("BarrierRunnable run first");
 	}
-	
+
 }
